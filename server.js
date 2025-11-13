@@ -37,77 +37,115 @@ app.get("/api/restaurants", async (req, res) => {
 // 👉 Route 2: Get menu/details of a restaurant by ID
 
 
+// app.get("/api/restaurant/:id", async (req, res) => {
+//   const restaurantId = req.params.id;
+  
+//   const apiUrl = `https://www.swiggy.com/dapi/menu/pl?page-type=REGULAR_MENU&complete-menu=true&lat=26.83730&lng=80.91650&restaurantId=${restaurantId}&catalog_qa=undefined`;
+  
+//   console.log('🚀 Launching browser to bypass WAF...');
+  
+//   const browser = await chromium.launch({
+//     headless: true,  // Run headless for production
+//     args: ['--disable-blink-features=AutomationControlled']
+//   });
+
+//   try {
+//     const context = await browser.newContext({
+//       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+//       viewport: { width: 1920, height: 1080 },
+//       locale: 'en-US'
+//     });
+
+//     const page = await context.newPage();
+    
+//     await page.setExtraHTTPHeaders({
+//       'Accept-Language': 'en-US,en;q=0.9',
+//       'Accept': '*/*'
+//     });
+    
+//     console.log('🌐 Visiting Swiggy to establish session...');
+    
+//     // Visit main page first to pass WAF challenge
+//     await page.goto('https://www.swiggy.com', {
+//       waitUntil: 'networkidle',
+//       timeout: 30000
+//     });
+    
+//     console.log('⏳ Waiting for WAF challenge to complete...');
+//     await page.waitForTimeout(5000);
+    
+//     console.log('📡 Fetching API data...');
+    
+//     // Now fetch the API endpoint
+//     const response = await page.goto(apiUrl, {
+//       waitUntil: 'networkidle',
+//       timeout: 30000
+//     });
+    
+//     console.log('✅ API call successful!');
+//     console.log('Status:', response.status());
+    
+//     // Extract JSON data
+//     const textContent = await page.evaluate(() => {
+//       const pre = document.querySelector('pre');
+//       if (pre) return pre.textContent;
+//       return document.body.textContent;
+//     });
+    
+//     const jsonData = JSON.parse(textContent);
+    
+//     // Display summary
+//     console.log('\n📦 Data Summary:');
+//     console.log('Restaurant:', jsonData?.data?.cards?.[2]?.card?.card?.info?.name || 'N/A');
+//     console.log('Area:', jsonData?.data?.cards?.[2]?.card?.card?.info?.areaName || 'N/A');
+//     console.log('Rating:', jsonData?.data?.cards?.[2]?.card?.card?.info?.avgRating || 'N/A');
+//     console.log('Total Menu Groups:', jsonData?.data?.cards?.[4]?.groupedCard?.cardGroupMap?.REGULAR?.cards?.filter(c => c.card?.card?.itemCards)?.length || 'N/A');
+    
+//     return res.json(jsonData);
+
+//   } catch (error) {
+//     console.error('❌ Error:', error.message);
+//     throw error;
+//   } finally {
+//     await browser.close();
+//   }
+// });
+
+// axios-only route (Render-friendly)
 app.get("/api/restaurant/:id", async (req, res) => {
   const restaurantId = req.params.id;
-  
   const apiUrl = `https://www.swiggy.com/dapi/menu/pl?page-type=REGULAR_MENU&complete-menu=true&lat=26.83730&lng=80.91650&restaurantId=${restaurantId}&catalog_qa=undefined`;
-  
-  console.log('🚀 Launching browser to bypass WAF...');
-  
-  const browser = await chromium.launch({
-    headless: true,  // Run headless for production
-    args: ['--disable-blink-features=AutomationControlled']
-  });
 
   try {
-    const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      viewport: { width: 1920, height: 1080 },
-      locale: 'en-US'
+    const response = await axios.get(apiUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept: "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      timeout: 20000
     });
 
-    const page = await context.newPage();
-    
-    await page.setExtraHTTPHeaders({
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Accept': '*/*'
-    });
-    
-    console.log('🌐 Visiting Swiggy to establish session...');
-    
-    // Visit main page first to pass WAF challenge
-    await page.goto('https://www.swiggy.com', {
-      waitUntil: 'networkidle',
-      timeout: 30000
-    });
-    
-    console.log('⏳ Waiting for WAF challenge to complete...');
-    await page.waitForTimeout(5000);
-    
-    console.log('📡 Fetching API data...');
-    
-    // Now fetch the API endpoint
-    const response = await page.goto(apiUrl, {
-      waitUntil: 'networkidle',
-      timeout: 30000
-    });
-    
-    console.log('✅ API call successful!');
-    console.log('Status:', response.status());
-    
-    // Extract JSON data
-    const textContent = await page.evaluate(() => {
-      const pre = document.querySelector('pre');
-      if (pre) return pre.textContent;
-      return document.body.textContent;
-    });
-    
-    const jsonData = JSON.parse(textContent);
-    
-    // Display summary
-    console.log('\n📦 Data Summary:');
-    console.log('Restaurant:', jsonData?.data?.cards?.[2]?.card?.card?.info?.name || 'N/A');
-    console.log('Area:', jsonData?.data?.cards?.[2]?.card?.card?.info?.areaName || 'N/A');
-    console.log('Rating:', jsonData?.data?.cards?.[2]?.card?.card?.info?.avgRating || 'N/A');
-    console.log('Total Menu Groups:', jsonData?.data?.cards?.[4]?.groupedCard?.cardGroupMap?.REGULAR?.cards?.filter(c => c.card?.card?.itemCards)?.length || 'N/A');
-    
+    // If response data is string try to parse safely
+    let jsonData = response.data;
+    if (typeof jsonData === "string") {
+      try {
+        jsonData = JSON.parse(jsonData);
+      } catch (e) {
+        // Not JSON — return raw text so frontend can handle
+        return res.status(200).json({ raw: jsonData });
+      }
+    }
+
+    console.log("✅ Menu data fetched successfully (axios).");
     return res.json(jsonData);
-
-  } catch (error) {
-    console.error('❌ Error:', error.message);
-    throw error;
-  } finally {
-    await browser.close();
+  } catch (err) {
+    console.error("❌ Error fetching menu via axios:", err.message || err);
+    return res.status(502).json({
+      error: "Failed to fetch menu from Swiggy (axios).",
+      details: err.message || "unknown error"
+    });
   }
 });
 
